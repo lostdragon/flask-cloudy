@@ -12,12 +12,8 @@
 
 Name: {{ obj.name }} <br><br>
 Size: {{ obj.size }} bytes <br><br>
-
-Short url: {{ obj.short_url }} <br><br>
-
+Full Url: {{ obj.full_url }} <br><br>
 View file: <a href="{{ obj.url }}">{{ obj.url }}</a> <br><br>
-
-{% set download_url = obj.download_url() %}
-Download: <a href="{{ download_url }}">{{ download_url }}</a> <br><br>
+Extension: {{ obj.extension }} <br><br>
 </body>
 </html>

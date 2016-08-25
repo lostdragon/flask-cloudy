@@ -1,4 +1,3 @@
-
 from flask import Flask, request, render_template, redirect, abort, url_for
 from flask_cloudy import Storage
 
@@ -15,16 +14,17 @@ app.config.update({
 storage = Storage()
 storage.init_app(app)
 
+
 @app.route("/")
 def index():
-
     return render_template("index.html", storage=storage)
+
 
 @app.route("/view/<path:object_name>")
 def view(object_name):
     obj = storage.get(object_name)
-    print obj.name
     return render_template("view.html", obj=obj)
+
 
 @app.route("/upload", methods=["POST"])
 def upload():

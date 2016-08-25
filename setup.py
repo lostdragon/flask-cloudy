@@ -39,11 +39,11 @@ setup(
     packages=find_packages(),
     install_requires=[
         "Flask>=0.10.1",
-        "apache-libcloud==0.20.0",
-        "lockfile==0.10.2",
-        "shortuuid==0.1",
-        "six==1.9.0",
-        'python-slugify==0.1.0'
+        "apache-libcloud>=1.1.0",
+        "lockfile>=0.10.2",
+        "shortuuid>=0.1",
+        "six>=1.9.0",
+        'python-slugify>=0.1.0'
     ],
 
     keywords=["flask", "s3", "aws", "cloudfiles", "storage", "azure", "google", "cloudy"],
@@ -65,4 +65,3 @@ setup(
     ],
     zip_safe=False
 )
-
