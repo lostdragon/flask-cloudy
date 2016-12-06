@@ -19,10 +19,10 @@ Supported storage:
 from setuptools import setup, find_packages
 
 __NAME__ = "Flask-Cloudy"
-__version__ = "0.13.2"
+__version__ = "0.15.0"
 __author__ = "Mardix"
 __license__ = "MIT"
-__copyright__ = "2015"
+__copyright__ = "2016"
 
 setup(
     name=__NAME__,
@@ -65,3 +65,4 @@ setup(
     ],
     zip_safe=False
 )
+

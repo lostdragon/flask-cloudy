@@ -8,6 +8,8 @@ import base64
 import hmac
 import hashlib
 import warnings
+from contextlib import contextmanager
+import copy
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 from importlib import import_module
@@ -19,6 +21,7 @@ from libcloud.storage.base import Object as BaseObject, StorageDriver
 from libcloud.storage.drivers import local
 from six.moves.urllib.parse import urlparse, urlunparse, urljoin, urlencode
 import slugify
+
 
 SERVER_ENDPOINT = "FLASK_CLOUDY_SERVER"
 
@@ -39,10 +42,8 @@ ALL_EXTENSIONS = EXTENSIONS["TEXT"] \
                  + EXTENSIONS["DATA"] \
                  + EXTENSIONS["ARCHIVE"]
 
-
 class InvalidExtensionError(Exception):
     pass
-
 
 def get_file_name(filename):
     """
@@ -52,7 +53,6 @@ def get_file_name(filename):
     """
     return os.path.basename(filename)
 
-
 def get_file_extension(filename):
     """
     Return a file extension
@@ -60,7 +60,6 @@ def get_file_extension(filename):
     :return: str
     """
     return os.path.splitext(filename)[1][1:].lower()
-
 
 def get_file_extension_type(filename):
     """
@@ -74,7 +73,6 @@ def get_file_extension_type(filename):
             if ext in group:
                 return name
     return "OTHER"
-
 
 def get_driver_class(provider):
     """
@@ -95,7 +93,6 @@ def get_driver_class(provider):
     else:
         driver = getattr(Provider, provider.upper())
     return get_driver(driver)
-
 
 def get_provider_name(driver):
     """
@@ -119,6 +116,7 @@ class Storage(object):
                          + EXTENSIONS["IMAGE"] \
                          + EXTENSIONS["AUDIO"] \
                          + EXTENSIONS["DATA"]
+    _kw = {}
 
     def __init__(self,
                  provider=None,
@@ -145,6 +143,17 @@ class Storage(object):
             self.init_app(app)
 
         if provider:
+            # Hold the params that were passed
+            self._kw = {
+                "provider": provider,
+                "key": key,
+                "secret": secret,
+                "container": container,
+                "allowed_extensions": allowed_extensions,
+                "app": app
+            }
+            self._kw.update(kwargs)
+
             if allowed_extensions:
                 self.allowed_extensions = allowed_extensions
 
@@ -227,6 +236,19 @@ class Storage(object):
                       allowed_extensions=allowed_extensions)
 
         self._register_file_server(app)
+
+    @contextmanager
+    def use(self, container):
+        """
+        A context manager to temporarily use a different container on the same driver
+        :param container: str - the name of the container (bucket or a dir name if local)
+        :yield: Storage
+        """
+        kw = self._kw.copy()
+        kw["container"] = container
+        s = Storage(**kw)
+        yield s
+        del s
 
     def get(self, object_name):
         """
@@ -368,7 +390,6 @@ class Storage(object):
             else:
                 warnings.warn("Flask-Cloudy can't serve files. 'STORAGE_SERVER_FILES_URL' is not set")
 
-
 class Object(object):
     """
     The object file
@@ -447,8 +468,8 @@ class Object(object):
                     parsed_url.fragment
                 )
             if ('s3' in driver_name or
-                        'google' in driver_name or
-                        'azure' in driver_name):
+                    'google' in driver_name or
+                    'azure' in driver_name):
                 url = url.replace('http://', 'https://')
         return url
 
@@ -468,6 +489,7 @@ class Object(object):
         :return: str
         """
         return self.get_url(longurl=True)
+
 
     @property
     def secure_url(self):
@@ -508,6 +530,17 @@ class Object(object):
         :return: str
         """
         return "%s/%s" % (self.container.name, self.name)
+
+    @property
+    def full_path(self):
+        """
+        Return the full path of the local object
+        If not local, it will return self.path
+        :return: str
+        """
+        if "local" in self.driver.name.lower():
+            return "%s/%s" % self.container.key, self.path
+        return self.path
 
     def save_to(self, destination, name=None, overwrite=False, delete_on_failure=True):
         """
@@ -550,7 +583,7 @@ class Object(object):
 
             if 's3' in driver_name or 'google' in driver_name:
 
-                s2s = "GET\n\n\n{expires}\n/{object_name}" \
+                s2s = "GET\n\n\n{expires}\n/{object_name}"\
                     .format(expires=expires, object_name=self.path)
                 h = hmac.new(self.driver.secret, s2s, hashlib.sha1)
                 s = base64.encodestring(h.digest()).strip()
@@ -565,22 +598,9 @@ class Object(object):
 
             elif 'cloudfiles' in driver_name:
                 return self.driver.ex_get_object_temp_url(self._obj,
-                                                          method="GET",
-                                                          timeout=expires)
+                                                               method="GET",
+                                                               timeout=expires)
             else:
                 raise NotImplemented("This provider '%s' doesn't support or "
                                      "doesn't have a signed url "
                                      "implemented yet" % self.provider_name)
-
-    @property
-    def short_url(self):
-        """
-        DEPRECATED
-
-        Returns the url of the object
-        For local it will return it WITHOUT the domain name
-        :return:
-        """
-        warnings.warn(
-            "DEPRECATED: flask_cloudy.Object.short_url has been deprecated, use flask_cloudy.Object.url or flask_cloudy.Object.full_url")
-        return self.get_url()
