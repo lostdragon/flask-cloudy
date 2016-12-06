@@ -4,7 +4,7 @@
 ## About
 
 A Flask extension to **access, upload, download, save and delete** files on cloud storage providers such as: 
-AWS S3, Google Storage, Microsoft Azure, Rackspace Cloudfiles, and even Local file system.
+AWS S3, Google Storage, Microsoft Azure, Rackspace Cloudfiles, Aliyun OSS, and even Local file system.
 
 For local file storage, it also provides a flask endpoint to access the files.
  
@@ -93,6 +93,8 @@ Go to the "example" directory to get a workable flask-cloud example
 
 - Rackspace CloudFiles
 
+- Aliyun OSS
+
 - Local (for local file system)
 
 
@@ -106,7 +108,7 @@ Go to the "example" directory to get a workable flask-cloud example
 
 ## Install & Config
 
-    pip install flask-cloudy
+    pip install git+https://github.com/lostdragon/flask_cloudy.git
 
 ---
 
@@ -130,7 +132,7 @@ the behavior of Flask-Cloudy
 - GOOGLE_STORAGE
 - AZURE_BLOBS
 - CLOUDFILES
-
+- ALIYUN_OSS
 
 **- STORAGE_KEY** (str)
 
@@ -207,6 +209,7 @@ The **Storage** class allows you to access, upload, get an object from the Stora
     - GOOGLE_STORAGE
     - AZURE_BLOBS
     - CLOUDFILES
+    - ALIYUN_OSS
 
 - key: The access key of the cloud storage. None when provider is LOCAL
 
