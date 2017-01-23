@@ -9,7 +9,7 @@ AWS S3, Google Storage, Microsoft Azure, Rackspace Cloudfiles, Aliyun OSS, and e
 For local file storage, it also provides a flask endpoint to access the files.
  
  
-Version: 0.15.*
+Version: 0.16.*
 
 ---
 
@@ -246,7 +246,7 @@ It will also setup a server endpoint when STORAGE_PROVIDER == LOCAL
 	})
 	
 	# Setup storage
-	storage = new Storage()
+	storage = Storage()
 	storage.init_app(app) 
 	
     @app.route("/upload", methods=["POST", "GET"]):
