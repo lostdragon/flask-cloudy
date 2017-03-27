@@ -14,7 +14,8 @@ import copy
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 from importlib import import_module
-from flask import send_file, abort, url_for, request
+from flask import send_file, abort, url_for
+from flask import request as flask_request
 import uuid
 from libcloud.storage.types import Provider, ObjectDoesNotExistError
 from libcloud.storage.providers import DRIVERS, get_driver
@@ -24,7 +25,6 @@ from six.moves.urllib.parse import urlparse, urlunparse, urljoin, urlencode
 from six.moves.urllib import request
 from six import string_types
 import slugify
-
 
 SERVER_ENDPOINT = "FLASK_CLOUDY_SERVER"
 
@@ -47,8 +47,10 @@ ALL_EXTENSIONS = EXTENSIONS["TEXT"] \
 
 URL_REGEXP = re.compile(r'^(http|https|ftp|ftps)://')
 
+
 class InvalidExtensionError(Exception):
     pass
+
 
 def get_file_name(filename):
     """
@@ -58,6 +60,7 @@ def get_file_name(filename):
     """
     return os.path.basename(filename)
 
+
 def get_file_extension(filename):
     """
     Return a file extension
@@ -65,6 +68,7 @@ def get_file_extension(filename):
     :return: str
     """
     return os.path.splitext(filename)[1][1:].lower()
+
 
 def get_file_extension_type(filename):
     """
@@ -78,6 +82,7 @@ def get_file_extension_type(filename):
             if ext in group:
                 return name
     return "OTHER"
+
 
 def get_driver_class(provider):
     """
@@ -98,6 +103,7 @@ def get_driver_class(provider):
     else:
         driver = getattr(Provider, provider.upper())
     return get_driver(driver)
+
 
 def get_provider_name(driver):
     """
@@ -406,7 +412,6 @@ class Storage(object):
         It's recommended to serve static files through NGINX instead of Python
         Use this for development only
         :param app: Flask app instance
-
         """
         if isinstance(self.driver, local.LocalStorageDriver) \
                 and self.config["serve_files"]:
@@ -418,8 +423,8 @@ class Storage(object):
                 def files_server(object_name):
                     obj = self.get(object_name)
                     if obj is not None:
-                        dl = request.args.get("dl")
-                        name = request.args.get("name", obj.name)
+                        dl = flask_request.args.get("dl")
+                        name = flask_request.args.get("name", obj.name)
 
                         if get_file_extension(name) != obj.extension:
                             name += ".%s" % obj.extension
@@ -438,17 +443,14 @@ class Storage(object):
 class Object(object):
     """
     The object file
-
     @property
         name
         size
         hash
         extra
         meta_data
-
         driver
         container
-
     @method
         download() use save_to() instead
         delete()
@@ -530,8 +532,8 @@ class Object(object):
                     parsed_url.fragment
                 )
             if ('s3' in driver_name or
-                    'google' in driver_name or
-                    'azure' in driver_name):
+                        'google' in driver_name or
+                        'azure' in driver_name):
                 url = url.replace('http://', 'https://')
         return url
 
@@ -551,7 +553,6 @@ class Object(object):
         :return: str
         """
         return self.get_url(longurl=True)
-
 
     @property
     def secure_url(self):
@@ -645,7 +646,7 @@ class Object(object):
 
             if 's3' in driver_name or 'google' in driver_name:
 
-                s2s = "GET\n\n\n{expires}\n/{object_name}"\
+                s2s = "GET\n\n\n{expires}\n/{object_name}" \
                     .format(expires=expires, object_name=self.path)
                 h = hmac.new(self.driver.secret.encode('utf-8'), s2s.encode('utf-8'), hashlib.sha1)
                 s = base64.encodestring(h.digest()).strip()
@@ -660,8 +661,8 @@ class Object(object):
 
             elif 'cloudfiles' in driver_name:
                 return self.driver.ex_get_object_temp_url(self._obj,
-                                                               method="GET",
-                                                               timeout=expires)
+                                                          method="GET",
+                                                          timeout=expires)
             else:
                 raise NotImplemented("This provider '%s' doesn't support or "
                                      "doesn't have a signed url "
