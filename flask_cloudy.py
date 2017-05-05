@@ -664,6 +664,6 @@ class Object(object):
                                                           method="GET",
                                                           timeout=expires)
             else:
-                raise NotImplemented("This provider '%s' doesn't support or "
-                                     "doesn't have a signed url "
-                                     "implemented yet" % self.provider_name)
+                raise NotImplementedError("This provider '%s' doesn't support or "
+                                          "doesn't have a signed url "
+                                          "implemented yet" % self.provider_name)
