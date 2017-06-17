@@ -99,7 +99,7 @@ def get_driver_class(provider):
             raise ImportError('{0} provider not found at {1}'.format(
                 kls,
                 path))
-        driver = getattr(module, kls)
+        driver = provider
     else:
         driver = getattr(Provider, provider.upper())
     return get_driver(driver)
