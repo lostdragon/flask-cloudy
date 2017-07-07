@@ -533,7 +533,9 @@ class Object(object):
                 )
             if ('s3' in driver_name or
                         'google' in driver_name or
-                        'azure' in driver_name):
+                        'azure' in driver_name or
+                        'aliyun' in driver_name
+                ):
                 url = url.replace('http://', 'https://')
         return url
 
